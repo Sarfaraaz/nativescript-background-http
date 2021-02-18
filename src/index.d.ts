@@ -43,7 +43,7 @@ export interface ResultEventData extends observable.EventData {
     /**
      * The string response of the server.
      */
-    data: string;
+    response: string;
     /** HTTP response code if response object is present, otherwise -1 */
     responseCode: number;
 }

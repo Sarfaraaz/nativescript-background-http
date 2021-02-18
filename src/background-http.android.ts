@@ -43,7 +43,7 @@ function onProgressReceiverError(context: Context, uploadInfo: UploadInfo, respo
         object: task,
         error,
         responseCode: response && typeof response.getHttpCode === 'function' ? response.getHttpCode() : -1,
-        response
+        response: response.getBodyAsString()
     });
 }
 
@@ -68,7 +68,7 @@ function onProgressReceiverCompleted(context: Context, uploadInfo: UploadInfo, r
     task.notify(<common.ResultEventData>{
         eventName: "responded",
         object: task,
-        data: response.getBodyAsString(),
+        response: response.getBodyAsString(),
         responseCode: response && typeof response.getHttpCode === 'function' ? response.getHttpCode() : -1
     });
     task.notify(<common.CompleteEventData>{

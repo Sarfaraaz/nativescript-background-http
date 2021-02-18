@@ -5,6 +5,7 @@ import * as fileSystemModule from "tns-core-modules/file-system";
 const main_queue = dispatch_get_current_queue();
 let zonedOnProgress = null;
 let zonedOnError = null;
+let previousResponse = null;
 
 function onProgress(nsSession, nsTask, sent, expectedTotal) {
     const task = Task.getTask(nsSession, nsTask);
@@ -24,14 +25,16 @@ function onError(session, nsTask, error) {
         NSFileManager.defaultManager.removeItemAtPathError(task._fileToCleanup);
     }
     const response = nsTask && <NSHTTPURLResponse>nsTask.performSelector("response");
-    if (error) {
+    const hasResponseStatusError = response && response.statusCode >= 400 || false;
+
+    if (error || hasResponseStatusError) {
         task.notifyPropertyChange("status", task.status);
         task.notify(<common.ErrorEventData>{
             eventName: "error",
             object: task,
             error,
             responseCode: response ? response.statusCode : -1,
-            response
+            response: previousResponse || null
         });
     } else {
         task.notifyPropertyChange("upload", task.upload);
@@ -110,11 +113,12 @@ class BackgroundUploadDelegate extends NSObject implements NSURLSessionDelegate,
             // we have a response in the data...
             const jsTask = Task.getTask(session, dataTask);
             const jsonString = NSString.alloc().initWithDataEncoding(data, NSUTF8StringEncoding);
+            previousResponse = jsonString.toString();
 
             jsTask.notify(<common.ResultEventData>{
                 eventName: "responded",
                 object: jsTask,
-                data: jsonString.toString(),
+                response: jsonString.toString(),
                 responseCode: dataTask && dataTask.response ? (<NSHTTPURLResponse>dataTask.response).statusCode : -1
             });
         });
